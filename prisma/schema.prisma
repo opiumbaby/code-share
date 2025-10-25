@@ -1,0 +1,71 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @map("_id") @default(auto()) @db.ObjectId
+  email    String   @unique
+  username String   @unique
+  role     String
+
+  snippets    Snippet[]
+  collections Collection[] @relation("CollectionOwner")
+  comments    Comment[]
+}
+
+model Language {
+  id            String   @id @map("_id") @default(auto()) @db.ObjectId
+  name          String
+  fileExtension String
+
+  snippets Snippet[]
+}
+
+model Tag {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  name       String   @unique
+  usageCount Int      @default(0)
+}
+
+model Snippet {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  title      String
+  code       String
+  languageId String   @db.ObjectId
+  authorId   String   @db.ObjectId
+  tags       String[] 
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  author   User     @relation(fields: [authorId], references: [id])
+  language Language @relation(fields: [languageId], references: [id])
+  comments Comment[]
+}
+
+model Collection {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  name       String
+  ownerId    String   @db.ObjectId
+  snippetIds String[] @db.ObjectId
+
+  owner User @relation("CollectionOwner", fields: [ownerId], references: [id])
+}
+
+model Comment {
+  id        String   @id @map("_id") @default(auto()) @db.ObjectId
+  text      String
+  authorId  String   @db.ObjectId
+  snippetId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  author  User    @relation(fields: [authorId], references: [id])
+  snippet Snippet @relation(fields: [snippetId], references: [id])
+}
