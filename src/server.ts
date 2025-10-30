@@ -19,7 +19,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/languages", languageRoutes);
 
-app.get("/", (_req, res) => res.send("✅ Server is running!"));
+app.get("/", (_req, res) => res.send("Server is running!"));
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`🚀 Server ready on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server ready on http://localhost:${PORT}`));

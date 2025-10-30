@@ -1,16 +1,42 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
 
+// =======================
+// Create User
+// =======================
 export const createUser = async (req: Request, res: Response) => {
+  console.log("Received body:", req.body); // Логируем, что приходит
+  console.log("REQ.BODY:", req.body);
   try {
     const { email, username, role } = req.body;
-    const user = await prisma.user.create({ data: { email, username, role } });
+
+    // Проверка обязательных полей
+    if (!email || !username || !role) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const user = await prisma.user.create({
+      data: { email, username, role },
+    });
+
     res.status(201).json(user);
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error creating user:", error);
+
+    // Ошибка уникальности email или username
+    if (error.code === "P2002") {
+      return res
+        .status(400)
+        .json({ error: "Email or username already exists" });
+    }
+
     res.status(500).json({ error: "Failed to create user", details: error });
   }
 };
 
+// =======================
+// Get All Users
+// =======================
 export const getUsers = async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany();
@@ -20,6 +46,9 @@ export const getUsers = async (_req: Request, res: Response) => {
   }
 };
 
+// =======================
+// Get User by ID
+// =======================
 export const getUserById = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
@@ -31,17 +60,32 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
+// =======================
+// Update User
+// =======================
 export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { email, username, role } = req.body;
   try {
-    const user = await prisma.user.update({ where: { id }, data: { email, username, role } });
+    const user = await prisma.user.update({
+      where: { id },
+      data: { email, username, role },
+    });
     res.json(user);
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error updating user:", error);
+    if (error.code === "P2002") {
+      return res
+        .status(400)
+        .json({ error: "Email or username already exists" });
+    }
     res.status(500).json({ error: "Failed to update user" });
   }
 };
 
+// =======================
+// Delete User
+// =======================
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {

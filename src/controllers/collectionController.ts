@@ -5,10 +5,23 @@ import { prisma } from "../prisma";
 export const createCollection = async (req: Request, res: Response) => {
   try {
     const { name, ownerId, snippetIds } = req.body;
-    const collection = await prisma.collection.create({ data: { name, ownerId, snippetIds } });
+
+    if (!name) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+
+    const collection = await prisma.collection.create({
+      data: {
+        name,
+        ownerId: ownerId || undefined, // опциональный owner
+        snippetIds: snippetIds || [],
+      },
+    });
+
     res.status(201).json(collection);
   } catch (error) {
-    res.status(500).json({ error: "Failed to create collection" });
+    console.error("Error creating collection:", error);
+    res.status(500).json({ error: "Failed to create collection", details: error });
   }
 };
 
@@ -17,14 +30,21 @@ export const getCollections = async (req: Request, res: Response) => {
   try {
     const { ownerId } = req.query;
     const where: any = {};
-    if (ownerId) where.ownerId = ownerId as string;
+    if (ownerId && typeof ownerId === "string") {
+      where.ownerId = ownerId;
+    }
 
     const collections = await prisma.collection.findMany({
       where,
       include: { owner: true },
     });
-    res.json(collections);
+
+    // Убираем коллекции с осиротевшими owner
+    const safeCollections = collections.filter(c => c.owner !== null);
+
+    res.json(safeCollections);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch collections" });
+    console.error("Error fetching collections:", error);
+    res.status(500).json({ error: "Failed to fetch collections", details: error });
   }
 };

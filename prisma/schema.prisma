@@ -38,26 +38,30 @@ model Snippet {
   id         String   @id @map("_id") @default(auto()) @db.ObjectId
   title      String
   code       String
-  languageId String   @db.ObjectId
-  authorId   String   @db.ObjectId
+  languageId String?  @db.ObjectId   // теперь опционально
+  authorId   String?  @db.ObjectId
   tags       String[] 
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  author   User     @relation(fields: [authorId], references: [id])
-  language Language @relation(fields: [languageId], references: [id])
+  author   User?     @relation(fields: [authorId], references: [id])
+  language Language? @relation(fields: [languageId], references: [id])
   comments Comment[]
 }
+
+
 
 model Collection {
   id         String   @id @map("_id") @default(auto()) @db.ObjectId
   name       String
-  ownerId    String   @db.ObjectId
+  ownerId    String?  @db.ObjectId
   snippetIds String[] @db.ObjectId
 
-  owner User @relation("CollectionOwner", fields: [ownerId], references: [id])
+  owner User? @relation("CollectionOwner", fields: [ownerId], references: [id])
 }
+
+
 
 model Comment {
   id        String   @id @map("_id") @default(auto()) @db.ObjectId
