@@ -34,9 +34,7 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-// =======================
-// Get All Users
-// =======================
+
 export const getUsers = async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany();
@@ -46,9 +44,7 @@ export const getUsers = async (_req: Request, res: Response) => {
   }
 };
 
-// =======================
-// Get User by ID
-// =======================
+
 export const getUserById = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
@@ -60,9 +56,7 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-// =======================
-// Update User
-// =======================
+
 export const updateUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { email, username, role } = req.body;
@@ -83,9 +77,7 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-// =======================
-// Delete User
-// =======================
+
 export const deleteUser = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
