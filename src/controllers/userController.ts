@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../prisma";
 
-// =======================
-// Create User
-// =======================
+
 export const createUser = async (req: Request, res: Response) => {
   console.log("Received body:", req.body); // Логируем, что приходит
   console.log("REQ.BODY:", req.body);
