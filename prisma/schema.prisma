@@ -38,7 +38,7 @@ model Snippet {
   id         String   @id @map("_id") @default(auto()) @db.ObjectId
   title      String
   code       String
-  languageId String?  @db.ObjectId   // теперь опционально
+  languageId String?  @db.ObjectId
   authorId   String?  @db.ObjectId
   tags       String[] 
 
