@@ -70,6 +70,6 @@ model Comment {
   snippetId String   @db.ObjectId
   createdAt DateTime @default(now())
 
-  author  User    @relation(fields: [authorId], references: [id])
-  snippet Snippet @relation(fields: [snippetId], references: [id])
+  author  User?    @relation(fields: [authorId], references: [id])  
+  snippet Snippet? @relation(fields: [snippetId], references: [id]) 
 }
