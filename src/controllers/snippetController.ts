@@ -18,7 +18,7 @@ export const createSnippet = async (req: Request, res: Response) => {
 
     const snippet = await createSnippetService({ title, code, languageId, authorId, tags });
     res.status(201).json(snippet);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating snippet:", error);
     res.status(500).json({ error: "Failed to create snippet", details: error });
   }
@@ -35,7 +35,7 @@ export const getSnippets = async (req: Request, res: Response) => {
     });
 
     res.json(snippets);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching snippets:", error);
     res.status(500).json({ error: "Failed to fetch snippets", details: error });
   }
@@ -62,7 +62,7 @@ export const updateSnippet = async (req: Request, res: Response) => {
   try {
     const snippet = await updateSnippetService(id, { title, code, languageId, tags });
     res.json(snippet);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating snippet:", error);
     res.status(500).json({ error: "Failed to update snippet", details: error });
   }
