@@ -42,6 +42,27 @@ export const getComments = async (req: Request, res: Response) => {
   }
 };
 
+export const updateComment = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid comment ID" });
+    }
+
+    if (!text) {
+      return res.status(400).json({ error: "Text is required" });
+    }
+
+    const comment = await commentService.updateComment(id, { text });
+    res.json(comment);
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    res.status(500).json({ error: "Failed to update comment", details: error });
+  }
+};
+
 export const deleteComment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

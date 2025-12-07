@@ -34,6 +34,13 @@ export const commentService = {
         return comments.filter(c => c.author !== null && c.snippet !== null);
     },
 
+    async updateComment(id: string, data: Partial<{ text: string }>) {
+        return await prisma.comment.update({
+            where: { id },
+            data,
+        });
+    },
+
     async deleteComment(id: string) {
         return await prisma.comment.delete({
             where: { id },

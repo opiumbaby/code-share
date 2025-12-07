@@ -1,7 +1,5 @@
-// src/tests/setup.ts
 import { vi, beforeEach } from 'vitest';
 
-// ✅ Создаем моки БЕЗ импорта других модулей
 vi.mock('../prisma', () => ({
   prisma: {
     user: {
