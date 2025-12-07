@@ -5,7 +5,6 @@ export const createCollection = async (req: Request, res: Response) => {
   try {
     const { name, ownerId, snippetIds } = req.body;
 
-    // Валидация
     if (!name) {
       return res.status(400).json({ error: "Name is required" });
     }
@@ -18,7 +17,6 @@ export const createCollection = async (req: Request, res: Response) => {
 
     res.status(201).json(collection);
   } catch (error) {
-    console.error("Error creating collection:", error);
     res.status(500).json({ error: "Failed to create collection", details: error });
   }
 };
@@ -31,9 +29,8 @@ export const getCollections = async (req: Request, res: Response) => {
       typeof ownerId === "string" ? ownerId : undefined
     );
 
-    res.json(collections);
+    res.json(collections);//возврат массива коллекций
   } catch (error) {
-    console.error("Error fetching collections:", error);
     res.status(500).json({ error: "Failed to fetch collections", details: error });
   }
 };

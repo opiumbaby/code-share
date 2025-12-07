@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { createComment, getComments } from "../controllers/commentController";
+import { createComment, getComments, deleteComment } from "../controllers/commentController";
 
 const router = Router();
 
-router.post("/", createComment);  // Создать комментарий
-router.get("/", getComments);     // Получить комментарии (по snippetId)
+router.post("/", createComment);
+router.get("/", getComments);
+router.delete("/:id", deleteComment);
 
 export default router;

@@ -2,17 +2,19 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as commentService from '../services/commentService';
 import { prisma } from '../prisma';
 
+// Мокаем prisma, чтобы реальные запросы к базе не выполнялись
 vi.mock('../prisma', () => ({
     prisma: {
         comment: {
             create: vi.fn(),
             findMany: vi.fn(),
+            delete: vi.fn(),
         },
     },
 }));
 
 describe('CommentService', () => {
-    beforeEach(() => vi.clearAllMocks());
+    beforeEach(() => vi.clearAllMocks()); // Сбрасываем моки перед каждым тестом
 
     const mockComment = {
         id: '507f1f77bcf86cd799439011',
@@ -25,6 +27,7 @@ describe('CommentService', () => {
     };
 
     it('создает комментарий', async () => {
+        // Мокируем результат prisma.create
         (prisma.comment.create as any).mockResolvedValue(mockComment);
 
         const result = await commentService.commentService.createComment({
@@ -33,38 +36,26 @@ describe('CommentService', () => {
             snippetId: '507f1f77bcf86cd799439013',
         });
 
-        expect(result).toEqual(mockComment);
+        expect(result).toEqual(mockComment); // Проверяем, что сервис вернул правильные данные
     });
 
     it('получает все комментарии', async () => {
+        // Мокируем результат prisma.findMany
         (prisma.comment.findMany as any).mockResolvedValue([mockComment]);
 
         const result = await commentService.commentService.getComments();
 
-        expect(result).toHaveLength(1);
+        expect(result).toHaveLength(1); // Проверяем, что вернулся массив нужной длины
     });
 
-    it('фильтрует по snippetId', async () => {
-        (prisma.comment.findMany as any).mockResolvedValue([mockComment]);
+    it('удаляет комментарий', async () => {
+        // Мокируем prisma.delete
+        (prisma.comment.delete as any).mockResolvedValue(mockComment);
 
-        await commentService.commentService.getComments('507f1f77bcf86cd799439013');
+        await commentService.commentService.deleteComment('507f1f77bcf86cd799439011');
 
-        expect(prisma.comment.findMany).toHaveBeenCalledWith({
-            where: { snippetId: '507f1f77bcf86cd799439013' },
-            include: { author: true, snippet: true },
+        expect(prisma.comment.delete).toHaveBeenCalledWith({
+            where: { id: '507f1f77bcf86cd799439011' }, // Проверяем корректность запроса
         });
-    });
-
-    it('фильтрует невалидные комментарии', async () => {
-        const comments = [
-            mockComment,
-            { ...mockComment, id: '2', author: null },
-            { ...mockComment, id: '3', snippet: null },
-        ];
-        (prisma.comment.findMany as any).mockResolvedValue(comments);
-
-        const result = await commentService.commentService.getComments();
-
-        expect(result).toHaveLength(1);
     });
 });

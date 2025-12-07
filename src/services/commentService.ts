@@ -7,7 +7,6 @@ interface CreateCommentData {
 }
 
 export const commentService = {
-
     async createComment(data: CreateCommentData) {
         return await prisma.comment.create({
             data: {
@@ -17,8 +16,7 @@ export const commentService = {
             },
         });
     },
-
-
+    //по конкретному сиппету если передан id
     async getComments(snippetId?: string) {
         const where: any = {};
         if (snippetId) {
@@ -32,8 +30,13 @@ export const commentService = {
                 snippet: true,
             },
         });
-
-
+        //фильтруем чтобы не было комментариев без автора или без связанного сниппета
         return comments.filter(c => c.author !== null && c.snippet !== null);
+    },
+
+    async deleteComment(id: string) {
+        return await prisma.comment.delete({
+            where: { id },
+        });
     },
 };

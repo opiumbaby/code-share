@@ -22,10 +22,10 @@ export const collectionService = {
         if (ownerId) {
             where.ownerId = ownerId;
         }
-
+        //ищем все записи соответсвующие фильтру
         const collections = await prisma.collection.findMany({
             where,
-            include: { owner: true },
+            include: { owner: true },//так же данные владельца получить
         });
 
         return collections.filter(c => c.owner !== null);
