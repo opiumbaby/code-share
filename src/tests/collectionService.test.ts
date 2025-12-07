@@ -8,7 +8,7 @@ describe('CollectionService', () => {
         vi.clearAllMocks();
     });
 
-    // Фейковая коллекция, которую будут возвращать моки
+    // Фейковая коллекция которую будут возвращать моки
     const mockCollection = {
         id: '507f1f77bcf86cd799439011',
         name: 'Test Collection',
@@ -54,7 +54,7 @@ describe('CollectionService', () => {
     it('фильтрует по ownerId', async () => {
         (prisma.collection.findMany as any).mockResolvedValue([mockCollection]);
 
-        // Передаём ownerId → сервис должен вызвать findMany с фильтром
+        // Передаём ownerId - сервис должен вызвать findMany с фильтром
         await collectionService.collectionService.getCollections('507f1f77bcf86cd799439012');
 
         expect(prisma.collection.findMany).toHaveBeenCalledWith({

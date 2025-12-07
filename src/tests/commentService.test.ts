@@ -8,7 +8,7 @@ describe('CommentService', () => {
         vi.clearAllMocks();
     });
 
-    // Тестовый комментарий, который возвращают моки
+    // Тестовый комментарий который возвращают моки
     const mockComment = {
         id: '507f1f77bcf86cd799439011',
         text: 'Great code!',
@@ -30,7 +30,7 @@ describe('CommentService', () => {
             snippetId: '507f1f77bcf86cd799439013',
         });
 
-        // Проверяем корректность данных, переданных в prisma
+        // Проверяем корректность данных переданных в prisma
         expect(prisma.comment.create).toHaveBeenCalledWith({
             data: {
                 text: 'Great code!',
@@ -55,7 +55,7 @@ describe('CommentService', () => {
     it('фильтрует по snippetId', async () => {
         (prisma.comment.findMany as any).mockResolvedValue([mockComment]);
 
-        // Передаём snippetId → сервис должен отфильтровать
+        // Передаём snippetId - сервис должен отфильтровать
         await commentService.commentService.getComments('507f1f77bcf86cd799439013');
 
         expect(prisma.comment.findMany).toHaveBeenCalledWith({
@@ -65,7 +65,7 @@ describe('CommentService', () => {
     });
 
     it('фильтрует невалидные комментарии', async () => {
-        // Один нормальный + два невалидных
+        // Один нормальный и два невалидных
         const comments = [
             mockComment,
             { ...mockComment, id: '2', author: null },
@@ -91,7 +91,7 @@ describe('CommentService', () => {
             { text: 'Updated text!' }
         );
 
-        // Проверяем, что обновление было вызвано с нужными аргументами
+        // Проверяем что обновление было вызвано с нужными аргументами
         expect(prisma.comment.update).toHaveBeenCalledWith({
             where: { id: '507f1f77bcf86cd799439011' },
             data: { text: 'Updated text!' },
