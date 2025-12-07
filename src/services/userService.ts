@@ -1,37 +1,46 @@
 import { prisma } from "../prisma";
 
-// Создать пользователя
-export const createUserService = async (data: {
+// Интерфейс для данных при создании пользователя
+export interface CreateUserData {
   email: string;
   username: string;
   role: string;
-}) => {
-  return prisma.user.create({ data });
+}
+
+// Интерфейс для данных при обновлении пользователя
+export interface UpdateUserData {
+  email?: string;
+  username?: string;
+  role?: string;
+}
+
+// Создать пользователя в базе
+export const createUserService = async (data: CreateUserData) => {
+  return prisma.user.create({
+    data, 
+  });
 };
 
 // Получить всех пользователей
 export const getUsersService = async () => {
   return prisma.user.findMany({
-    include: { snippets: true }, // подтянуть связанные сниппеты
+    include: { snippets: true }, // взять также связанные сниппеты
   });
 };
 
-// Получить пользователя по ID
+// Получить одного пользователя по ID
 export const getUserByIdService = async (id: string) => {
   return prisma.user.findUnique({
-    where: { id },
+    where: { id },  
     include: { snippets: true },
   });
 };
 
 // Обновить пользователя
-export const updateUserService = async (
-  id: string,
-  data: Partial<{ email: string; username: string; role: string }>
-) => {
+export const updateUserService = async (id: string, data: UpdateUserData) => {
   return prisma.user.update({
     where: { id },
-    data,
+    data, // какие поля обновляем
   });
 };
 

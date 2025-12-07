@@ -1,13 +1,38 @@
 import { prisma } from "../prisma";
 
-// Создать сниппет
-export const createSnippetService = async (data: {
+//
+// ─── ИНТЕРФЕЙСЫ ───────────────────────────────────────────────
+//
+
+// Данные для создания сниппета
+export interface CreateSnippetData {
   title: string;
   code: string;
   languageId?: string;
   authorId?: string;
   tags?: string[];
-}) => {
+}
+
+// Фильтры при получении списка
+export interface SnippetFilter {
+  tag?: string;
+  languageId?: string;
+}
+
+// Данные для обновления сниппета
+export interface UpdateSnippetData {
+  title?: string;
+  code?: string;
+  languageId?: string;
+  tags?: string[];
+}
+
+//
+// ─── СЕРВИСЫ ─────────────────────────────────────────────────
+//
+
+// Создать сниппет
+export const createSnippetService = async (data: CreateSnippetData) => {
   return prisma.snippet.create({
     data: {
       title: data.title,
@@ -24,11 +49,8 @@ export const createSnippetService = async (data: {
   });
 };
 
-// Получить все сниппеты (с опциональной фильтрацией)
-export const getSnippetsService = async (filter?: {
-  tag?: string;
-  languageId?: string;
-}) => {
+// Получить все сниппеты (с фильтрацией)
+export const getSnippetsService = async (filter?: SnippetFilter) => {
   const where: any = {};
 
   if (filter?.tag) {
@@ -47,13 +69,13 @@ export const getSnippetsService = async (filter?: {
     },
   });
 
-  // Убираем "сиротевшие" записи
+  // Убрать "осиротевшие" записи без автора или языка
   return snippets.filter(s => s.author !== null && s.language !== null);
 };
 
 // Получить сниппет по ID
 export const getSnippetByIdService = async (id: string) => {
-  const snippet = await prisma.snippet.findUnique({
+  return prisma.snippet.findUnique({
     where: { id },
     include: {
       author: true,
@@ -61,19 +83,10 @@ export const getSnippetByIdService = async (id: string) => {
       comments: true,
     },
   });
-  return snippet;
 };
 
 // Обновить сниппет
-export const updateSnippetService = async (
-  id: string,
-  data: Partial<{
-    title: string;
-    code: string;
-    languageId: string;
-    tags: string[];
-  }>
-) => {
+export const updateSnippetService = async (id: string, data: UpdateSnippetData) => {
   return prisma.snippet.update({
     where: { id },
     data: {
