@@ -28,6 +28,6 @@ export const collectionService = {
             include: { owner: true },//так же данные владельца получить
         });
 
-        return collections.filter(c => c.owner !== null);
+        return collections.filter(collect => collect.owner !== null);
     },
 };

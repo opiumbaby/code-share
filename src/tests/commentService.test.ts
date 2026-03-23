@@ -16,7 +16,7 @@ describe('CommentService', () => {
         snippetId: '507f1f77bcf86cd799439013',
         createdAt: new Date(),
         author: { id: '507f1f77bcf86cd799439012', email: 'test@test.com', username: 'user', role: 'user' },
-        snippet: { id: '507f1f77bcf86cd799439013', title: 'Test', code: 'code', tags: [] },
+        snippet: { id: '507f1f77bcf86cd799439013', title: 'Test', code: 'code', tags: [], languageId: 'lang123' },
     };
 
     it('создаёт комментарий', async () => {
@@ -80,28 +80,92 @@ describe('CommentService', () => {
         expect(result).toHaveLength(1);
     });
 
+    it('фильтрует по authorId', async () => {
+
+        const author1Comment = {
+            ...mockComment,
+            authorId: '507f1f77bcf86cd799439012',
+            text: 'Comment',
+        };
+
+        (prisma.comment.findMany as any).mockResolvedValue([author1Comment]);
+        const result = await commentService.commentService.getComments(
+            undefined,
+            '507f1f77bcf86cd799439012'
+        );
+
+        expect(prisma.comment.findMany).toHaveBeenCalledWith({
+            where: { authorId: '507f1f77bcf86cd799439012' },
+            include: { author: true, snippet: true },
+        });
+
+        expect(result).toHaveLength(1);
+        expect(result[0].authorId).toBe('507f1f77bcf86cd799439012');
+        expect(result[0].text).toBe('Comment');
+    });
+
+    it('фильтрует по languageId', async () => {
+
+        const jsComm = {
+            ...mockComment,
+            id: '1',
+            text: 'сomment',
+            snippet: {
+                id: 's1',
+                title: 'JS Code',
+                code: 'console.log()',
+                tags: [],
+                languageId: '507f1f77bcf86cd799439020',
+            },
+        };
+
+
+        (prisma.comment.findMany as any).mockResolvedValue([jsComm]);
+
+
+        const result = await commentService.commentService.getComments(
+            undefined,
+            undefined,
+            '507f1f77bcf86cd799439020'
+        );
+
+
+        expect(prisma.comment.findMany).toHaveBeenCalledWith({
+            where: {
+                snippet: {
+                    languageId: '507f1f77bcf86cd799439020'
+                }
+            },
+            include: { author: true, snippet: true },
+        });
+
+        expect(result).toHaveLength(1);
+        expect(result[0].snippet!.languageId).toBe('507f1f77bcf86cd799439020');
+        expect(result[0].text).toBe('сomment');
+    });
+
+
     it('обновляет комментарий', async () => {
         const updatedComment = { ...mockComment, text: 'Updated text!' };
 
-        // Мокаем prisma.update
         (prisma.comment.update as any).mockResolvedValue(updatedComment);
 
         const result = await commentService.commentService.updateComment(
             '507f1f77bcf86cd799439011',
-            { text: 'Updated text!' }
+            { text: 'Updated text' }
         );
 
-        // Проверяем что обновление было вызвано с нужными аргументами
+
         expect(prisma.comment.update).toHaveBeenCalledWith({
             where: { id: '507f1f77bcf86cd799439011' },
-            data: { text: 'Updated text!' },
+            data: { text: 'Updated text' },
         });
 
         expect(result).toEqual(updatedComment);
     });
 
     it('удаляет комментарий', async () => {
-        // Мокаем удаление
+
         (prisma.comment.delete as any).mockResolvedValue(mockComment);
 
         await commentService.commentService.deleteComment('507f1f77bcf86cd799439011');
@@ -111,3 +175,4 @@ describe('CommentService', () => {
         });
     });
 });
+

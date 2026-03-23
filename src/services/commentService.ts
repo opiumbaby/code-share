@@ -17,10 +17,19 @@ export const commentService = {
         });
     },
     //по конкретному сиппету если передан id
-    async getComments(snippetId?: string) {
+    async getComments(snippetId?: string, authorId?: string, languageId?: string) {
         const where: any = {};
+
         if (snippetId) {
             where.snippetId = snippetId;
+        }
+
+        if (authorId) {
+            where.authorId = authorId;
+        }
+
+        if (languageId) {
+            where.snippet = { languageId };
         }
 
         const comments = await prisma.comment.findMany({
@@ -33,7 +42,7 @@ export const commentService = {
         //фильтруем чтобы не было комментариев без автора или без связанного сниппета
         return comments.filter(c => c.author !== null && c.snippet !== null);
     },
-
+    //делает не обязательным
     async updateComment(id: string, data: Partial<{ text: string }>) {
         return await prisma.comment.update({
             where: { id },

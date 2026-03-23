@@ -58,7 +58,6 @@ export const updateComment = async (req: Request, res: Response) => {
     const comment = await commentService.updateComment(id, { text });
     res.json(comment);
   } catch (error) {
-    console.error("Error updating comment:", error);
     res.status(500).json({ error: "Failed to update comment", details: error });
   }
 };
@@ -67,7 +66,7 @@ export const deleteComment = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await commentService.deleteComment(id);
-    res.json({ message: "Comment deleted successfully" });
+    res.json({ message: "Comment deleted success" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete comment", details: error });
   }
