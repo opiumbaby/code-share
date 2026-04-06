@@ -1,16 +1,46 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "outDir": "dist",
-    "rootDir": "src",
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
     "strict": true,
+    "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "noImplicitAny": false,
-    "types": ["vitest/globals"]
+    "isolatedModules": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "incremental": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "vitest/globals"
+    ],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
