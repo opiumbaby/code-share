@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 
 export default function CommentItem({
   id,
   text,
+  authorId,
   author,
   avatarUrl,
   createdAt,
@@ -15,6 +17,7 @@ export default function CommentItem({
 }: {
   id: string;
   text: string;
+  authorId?: string | null;
   author: string;
   avatarUrl?: string | null;
   createdAt: string | Date;
@@ -59,12 +62,24 @@ export default function CommentItem({
       ) : (
         <>
           <div className="comment-header">
-            <div className="comment-avatar">
-              {avatarUrl ? <img src={avatarUrl} alt={author} /> : author.slice(0, 1).toUpperCase()}
-            </div>
+            {authorId ? (
+              <Link href={`/users/${authorId}`} className="comment-avatar">
+                {avatarUrl ? <img src={avatarUrl} alt={author} /> : author.slice(0, 1).toUpperCase()}
+              </Link>
+            ) : (
+              <div className="comment-avatar">
+                {avatarUrl ? <img src={avatarUrl} alt={author} /> : author.slice(0, 1).toUpperCase()}
+              </div>
+            )}
             <div className="comment-meta">
               <div className="row">
-                <strong>{author}</strong>
+                {authorId ? (
+                  <Link href={`/users/${authorId}`} className="comment-author">
+                    <strong>{author}</strong>
+                  </Link>
+                ) : (
+                  <strong>{author}</strong>
+                )}
                 {isSnippetAuthor && <span className="chip accent">Автор</span>}
               </div>
               <span className="muted">

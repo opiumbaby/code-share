@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 
 const nameByExtension: Record<string, string> = {
@@ -39,6 +40,7 @@ export default function NewSnippetPage() {
   const languagesQuery = trpc.language.list.useQuery();
   const createLanguage = trpc.language.create.useMutation();
   const meQuery = trpc.user.me.useQuery();
+  const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
@@ -81,7 +83,7 @@ export default function NewSnippetPage() {
       resolvedLanguageId = created.id;
     }
 
-    await createMutation.mutateAsync({
+    const created = await createMutation.mutateAsync({
       title: title.trim(),
       code: code.trim(),
       languageId: resolvedLanguageId,
@@ -91,10 +93,7 @@ export default function NewSnippetPage() {
         .filter(Boolean),
     });
 
-    setTitle("");
-    setCode("");
-    setLanguageExtension("");
-    setTags("");
+    router.push(`/snippets/${created.id}`);
   };
 
   return (

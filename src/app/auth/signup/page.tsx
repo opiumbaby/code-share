@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 export default function SignUpPage() {
@@ -9,6 +10,7 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async () => {
     setError("");
@@ -19,6 +21,7 @@ export default function SignUpPage() {
         throw new Error(result.error.message || "Ошибка регистрации");
       }
       setSuccess("Регистрация завершена");
+      router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка регистрации");
     }

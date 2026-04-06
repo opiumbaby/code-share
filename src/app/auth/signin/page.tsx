@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
@@ -8,6 +9,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async () => {
     setError("");
@@ -18,6 +20,7 @@ export default function SignInPage() {
         throw new Error(result.error.message || "Ошибка входа");
       }
       setSuccess("Успешный вход");
+      router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка входа");
     }
