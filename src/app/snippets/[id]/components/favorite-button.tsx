@@ -23,8 +23,19 @@ export default function FavoriteButton({ snippetId }: { snippetId: string }) {
 
   return (
     <div className="row">
-      <button className="secondary" onClick={handleToggle} disabled={addMutation.isPending || removeMutation.isPending}>
-        {isFavorited ? "Убрать из избранного" : "В избранное"}
+      <button
+        className={isFavorited ? "favorite-toggle active" : "favorite-toggle"}
+        onClick={handleToggle}
+        disabled={addMutation.isPending || removeMutation.isPending}
+        aria-pressed={isFavorited}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 21.2c-.3 0-.6-.1-.8-.3l-7.2-6.7A5.3 5.3 0 0 1 3.2 7a5.2 5.2 0 0 1 9-2.6A5.2 5.2 0 0 1 21.8 7a5.3 5.3 0 0 1-1.8 7.2l-7.2 6.7c-.2.2-.5.3-.8.3z"
+            fill="currentColor"
+          />
+        </svg>
+        {isFavorited ? "В избранном" : "Добавить в избранное"}
       </button>
       {(addMutation.isError || removeMutation.isError) && <p>Нужна авторизация</p>}
     </div>

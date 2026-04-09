@@ -12,6 +12,7 @@ export default function CollectionDetailPage() {
   const collectionQuery = trpc.collection.byId.useQuery({ id }, { enabled: !!id });
   const snippetsQuery = trpc.collection.snippets.useQuery({ id }, { enabled: !!id });
   const meQuery = trpc.user.me.useQuery();
+  const languagesQuery = trpc.language.list.useQuery();
   const mineQuery = trpc.snippet.mine.useQuery(
     { page: 1, pageSize: 100 },
     { enabled: !!meQuery.data }
@@ -89,6 +90,10 @@ export default function CollectionDetailPage() {
   if (!collectionQuery.data) {
     return <p>Папка не найдена</p>;
   }
+
+  const languageById = new Map(
+    (languagesQuery.data ?? []).map((language) => [language.id, language.name])
+  );
 
   return (
     <section className="stack">
@@ -204,7 +209,12 @@ export default function CollectionDetailPage() {
             {snippetsQuery.data?.map((snippet) => (
               <Link key={snippet.id} href={`/snippets/${snippet.id}`} className="card snippet-tile">
                 <h4>{snippet.title}</h4>
-                <span className="muted">Открыть сниппет</span>
+                <div className="snippet-meta">
+                  <span className="language-chip">
+                    {languageById.get(snippet.languageId ?? "") ?? "—"}
+                  </span>
+                  <span className="muted">Открыть сниппет</span>
+                </div>
               </Link>
             ))}
           </div>

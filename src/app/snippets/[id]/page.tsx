@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import CommentForm from "./components/comment-form";
@@ -13,6 +13,8 @@ export default function SnippetDetailPage() {
   const snippetQuery = trpc.snippet.byId.useQuery({ id }, { enabled: !!id });
   const commentsQuery = trpc.comment.list.useQuery({ snippetId: id }, { enabled: !!id });
   const meQuery = trpc.user.me.useQuery();
+  const languagesQuery = trpc.language.list.useQuery();
+  const router = useRouter();
   const authorQuery = trpc.user.byId.useQuery(
     { id: snippetQuery.data?.authorId ?? "" },
     { enabled: !!snippetQuery.data?.authorId }
@@ -30,6 +32,9 @@ export default function SnippetDetailPage() {
   if (!snippetQuery.data) {
     return <p>Сниппет не найден</p>;
   }
+
+  const languageName =
+    languagesQuery.data?.find((item) => item.id === snippetQuery.data.languageId)?.name ?? "—";
 
   return (
     <section className="stack">
@@ -52,6 +57,7 @@ export default function SnippetDetailPage() {
             <span className="muted">—</span>
           )}
         </div>
+        <p className="muted">Язык: {languageName}</p>
         <div className="row stats snippet-stats">
           <span className="stat">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -79,7 +85,10 @@ export default function SnippetDetailPage() {
             <button
               className="secondary"
               onClick={async () => {
+                const approved = window.confirm("Удалить сниппет? Это действие нельзя отменить.");
+                if (!approved) return;
                 await deleteMutation.mutateAsync({ id });
+                router.push("/");
               }}
             >
               Удалить сниппет

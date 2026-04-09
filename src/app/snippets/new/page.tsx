@@ -4,31 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 
-const nameByExtension: Record<string, string> = {
-  ts: "TypeScript",
-  js: "JavaScript",
-  jsx: "JavaScript",
-  tsx: "TypeScript",
-  py: "Python",
-  java: "Java",
-  c: "C",
-  cpp: "C++",
-  cs: "C#",
-  go: "Go",
-  rs: "Rust",
-  kt: "Kotlin",
-  swift: "Swift",
-  php: "PHP",
-  rb: "Ruby",
-  sql: "SQL",
-  sh: "Bash",
-  html: "HTML",
-  css: "CSS",
-  dart: "Dart",
-  scala: "Scala",
-  r: "R",
-};
-
 function normalizeExtension(value: string) {
   const trimmed = value.trim().toLowerCase();
   if (!trimmed) return "";
@@ -38,7 +13,6 @@ function normalizeExtension(value: string) {
 export default function NewSnippetPage() {
   const createMutation = trpc.snippet.create.useMutation();
   const languagesQuery = trpc.language.list.useQuery();
-  const createLanguage = trpc.language.create.useMutation();
   const meQuery = trpc.user.me.useQuery();
   const router = useRouter();
 
@@ -65,28 +39,19 @@ export default function NewSnippetPage() {
       return;
     }
 
-    let resolvedLanguageId: string | undefined;
-
     const existing = languagesQuery.data?.find(
       (language) => language.fileExtension.toLowerCase() === extension
     );
 
-    if (existing) {
-      resolvedLanguageId = existing.id;
-    } else {
-      const key = extension.replace(".", "");
-      const name = nameByExtension[key] ?? key.toUpperCase();
-      const created = await createLanguage.mutateAsync({
-        name,
-        fileExtension: extension,
-      });
-      resolvedLanguageId = created.id;
+    if (!existing) {
+      setFormError("Недопустимое расширение. Выберите из списка.");
+      return;
     }
 
     const created = await createMutation.mutateAsync({
       title: title.trim(),
       code: code.trim(),
-      languageId: resolvedLanguageId,
+      languageId: existing.id,
       tags: tags
         .split(",")
         .map((item) => item.trim())
@@ -95,6 +60,9 @@ export default function NewSnippetPage() {
 
     router.push(`/snippets/${created.id}`);
   };
+
+  const acceptExtensions =
+    languagesQuery.data?.map((language) => language.fileExtension).join(",") ?? "";
 
   return (
     <section className="stack">
@@ -114,7 +82,7 @@ export default function NewSnippetPage() {
           />
           <input
             type="file"
-            accept=".ts,.tsx,.js,.jsx,.py,.java,.c,.cpp,.cs,.go,.rs,.kt,.swift,.php,.rb,.sql,.sh,.html,.css,.dart,.scala,.r,.txt"
+            accept={acceptExtensions}
             onChange={async (event) => {
               const file = event.target.files?.[0];
               if (!file) return;
@@ -125,6 +93,12 @@ export default function NewSnippetPage() {
                 : "";
               if (extension) {
                 setLanguageExtension(extension);
+                const allowed = languagesQuery.data?.some(
+                  (language) => language.fileExtension.toLowerCase() === extension
+                );
+                if (languagesQuery.data && !allowed) {
+                  setFormError("Недопустимое расширение. Выберите из списка.");
+                }
               }
               if (!title.trim()) {
                 setTitle(file.name.replace(/\.[^/.]+$/, ""));

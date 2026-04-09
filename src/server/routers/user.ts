@@ -1,8 +1,78 @@
 import { z } from "zod";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../trpc/trpc";
-import { collections, comments, snippets, users } from "../db/schema";
+import {
+  activities,
+  collectionSnippets,
+  collections,
+  comments,
+  favorites,
+  snippetTags,
+  snippets,
+  tags,
+  users,
+} from "../db/schema";
+
+async function recalcTagUsage(tx: any, tagId: string) {
+  const countResult = await tx
+    .select({ count: sql<number>`count(*)` })
+    .from(snippetTags)
+    .where(eq(snippetTags.tagId, tagId));
+
+  const count = Number(countResult[0]?.count ?? 0);
+  await tx.update(tags).set({ usageCount: count }).where(eq(tags.id, tagId));
+}
+
+async function getTableColumns(tx: any, table: string) {
+  const result = await tx.execute(
+    sql`select column_name from information_schema.columns where table_schema = 'public' and table_name = ${table}`
+  );
+  const rows = (result as any).rows ?? result ?? [];
+  return new Set<string>(rows.map((row: any) => row.column_name));
+}
+
+async function deleteByColumn(
+  tx: any,
+  table: string,
+  column: string,
+  value: string | null | undefined
+) {
+  if (!value) return;
+  const tableSql = sql.raw(`"${table}"`);
+  const columnSql = sql.raw(`"${column}"`);
+  await tx.execute(sql`delete from ${tableSql} where ${columnSql} = ${value}`);
+}
+
+async function deleteByUserId(tx: any, table: string, userId: string) {
+  const columns = await getTableColumns(tx, table);
+  if (columns.has("user_id")) {
+    await deleteByColumn(tx, table, "user_id", userId);
+    return;
+  }
+  if (columns.has("userId")) {
+    await deleteByColumn(tx, table, "userId", userId);
+  }
+}
+
+async function deleteAuthUser(tx: any, userId: string) {
+  const columns = await getTableColumns(tx, "user");
+  if (columns.has("id")) {
+    await deleteByColumn(tx, "user", "id", userId);
+    return;
+  }
+  if (columns.has("user_id")) {
+    await deleteByColumn(tx, "user", "user_id", userId);
+  }
+}
+
+async function deleteVerificationByEmail(tx: any, email?: string | null) {
+  if (!email) return;
+  const columns = await getTableColumns(tx, "verification");
+  if (columns.has("identifier")) {
+    await deleteByColumn(tx, "verification", "identifier", email);
+  }
+}
 
 export const userRouter = router({
   create: protectedProcedure
@@ -131,33 +201,66 @@ export const userRouter = router({
       if (input.id !== ctx.user.id) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not owner of profile" });
       }
+      return ctx.db.transaction(async (tx) => {
+        const snippetRows = await tx
+          .select({ id: snippets.id })
+          .from(snippets)
+          .where(eq(snippets.authorId, input.id));
+        const snippetIds = snippetRows.map((row) => row.id);
 
-      const snippetCount = await ctx.db
-        .select({ count: sql<number>`count(*)` })
-        .from(snippets)
-        .where(eq(snippets.authorId, input.id));
-      const commentCount = await ctx.db
-        .select({ count: sql<number>`count(*)` })
-        .from(comments)
-        .where(eq(comments.authorId, input.id));
-      const collectionCount = await ctx.db
-        .select({ count: sql<number>`count(*)` })
-        .from(collections)
-        .where(eq(collections.ownerId, input.id));
+        const collectionRows = await tx
+          .select({ id: collections.id })
+          .from(collections)
+          .where(eq(collections.ownerId, input.id));
+        const collectionIds = collectionRows.map((row) => row.id);
 
-      const total =
-        Number(snippetCount[0]?.count ?? 0) +
-        Number(commentCount[0]?.count ?? 0) +
-        Number(collectionCount[0]?.count ?? 0);
+        const tagRows =
+          snippetIds.length > 0
+            ? await tx
+                .select({ tagId: snippetTags.tagId })
+                .from(snippetTags)
+                .where(inArray(snippetTags.snippetId, snippetIds))
+            : [];
+        const tagIds = Array.from(new Set(tagRows.map((row) => row.tagId)));
 
-      if (total > 0) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "User has related data. Delete snippets/comments/collections first.",
-        });
-      }
+        if (collectionIds.length > 0) {
+          await tx
+            .delete(collectionSnippets)
+            .where(inArray(collectionSnippets.collectionId, collectionIds));
+        }
 
-      await ctx.db.delete(users).where(eq(users.id, input.id));
-      return { success: true };
+        if (snippetIds.length > 0) {
+          await tx
+            .delete(collectionSnippets)
+            .where(inArray(collectionSnippets.snippetId, snippetIds));
+          await tx
+            .delete(snippetTags)
+            .where(inArray(snippetTags.snippetId, snippetIds));
+          await tx.delete(comments).where(inArray(comments.snippetId, snippetIds));
+          await tx.delete(favorites).where(inArray(favorites.snippetId, snippetIds));
+        }
+
+        await tx.delete(comments).where(eq(comments.authorId, input.id));
+        await tx.delete(favorites).where(eq(favorites.userId, input.id));
+        await tx.delete(activities).where(eq(activities.userId, input.id));
+
+        if (snippetIds.length > 0) {
+          await tx.delete(snippets).where(inArray(snippets.id, snippetIds));
+        }
+
+        await tx.delete(collections).where(eq(collections.ownerId, input.id));
+        await tx.delete(users).where(eq(users.id, input.id));
+
+        await deleteByUserId(tx, "session", input.id);
+        await deleteByUserId(tx, "account", input.id);
+        await deleteVerificationByEmail(tx, ctx.user.email);
+        await deleteAuthUser(tx, input.id);
+
+        for (const tagId of tagIds) {
+          await recalcTagUsage(tx, tagId);
+        }
+
+        return { success: true };
+      });
     }),
 });

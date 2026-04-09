@@ -4,6 +4,29 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
+function toRussianSignInError(message: string) {
+  const text = message.toLowerCase();
+  if (text.includes("invalid credentials") || text.includes("invalid email") && text.includes("password")) {
+    return "Неверный email или пароль.";
+  }
+  if (text.includes("user not found")) {
+    return "Пользователь не найден.";
+  }
+  if (text.includes("email not verified") || text.includes("verify")) {
+    return "Подтвердите email перед входом.";
+  }
+  if (text.includes("too many") || text.includes("rate limit")) {
+    return "Слишком много попыток. Попробуйте позже.";
+  }
+  if (text.includes("invalid email") || (text.includes("email") && text.includes("format"))) {
+    return "Неверный формат email.";
+  }
+  if (text.includes("password") && text.includes("required")) {
+    return "Введите пароль.";
+  }
+  return "Не удалось войти. Проверьте данные и попробуйте снова.";
+}
+
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +37,10 @@ export default function SignInPage() {
   const handleSubmit = async () => {
     setError("");
     setSuccess("");
+    if (!email.trim() || !password.trim()) {
+      setError("Введите email и пароль.");
+      return;
+    }
     try {
       const result = await authClient.signIn.email({ email, password });
       if (result.error) {
@@ -22,7 +49,8 @@ export default function SignInPage() {
       setSuccess("Успешный вход");
       router.replace("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка входа");
+      const message = err instanceof Error ? err.message : "Ошибка входа";
+      setError(toRussianSignInError(message));
     }
   };
 

@@ -9,6 +9,7 @@ export default function UserProfilePage() {
   const id = typeof params.id === "string" ? params.id : "";
 
   const userQuery = trpc.user.byId.useQuery({ id }, { enabled: !!id });
+  const languagesQuery = trpc.language.list.useQuery();
   const snippetsQuery = trpc.snippet.list.useQuery(
     { authorId: id, page: 1, pageSize: 20 },
     { enabled: !!id }
@@ -37,6 +38,9 @@ export default function UserProfilePage() {
       : "name" in userQuery.data
       ? userQuery.data.name
       : "Пользователь";
+  const languageById = new Map(
+    (languagesQuery.data ?? []).map((language) => [language.id, language.name])
+  );
 
   return (
     <section className="stack">
@@ -67,25 +71,30 @@ export default function UserProfilePage() {
             {snippetsQuery.data?.map((snippet) => (
               <Link key={snippet.id} href={`/snippets/${snippet.id}`} className="card snippet-tile">
                 <h4>{snippet.title}</h4>
-                <div className="row stats">
-                  <span className="stat">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        d="M12 5c-5.2 0-9.3 4.6-10.4 6.1a1.4 1.4 0 0 0 0 1.7C2.7 14.4 6.8 19 12 19s9.3-4.6 10.4-6.2a1.4 1.4 0 0 0 0-1.7C21.3 9.6 17.2 5 12 5zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                    {snippet.views}
+                <div className="snippet-meta">
+                  <span className="language-chip">
+                    {languageById.get(snippet.languageId ?? "") ?? "—"}
                   </span>
-                  <span className="stat">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        d="M12 21.2c-.3 0-.6-.1-.8-.3l-7.2-6.7A5.3 5.3 0 0 1 3.2 7a5.2 5.2 0 0 1 9-2.6A5.2 5.2 0 0 1 21.8 7a5.3 5.3 0 0 1-1.8 7.2l-7.2 6.7c-.2.2-.5.3-.8.3z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                    {snippet.favoritesCount}
-                  </span>
+                  <div className="row stats">
+                    <span className="stat">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d="M12 5c-5.2 0-9.3 4.6-10.4 6.1a1.4 1.4 0 0 0 0 1.7C2.7 14.4 6.8 19 12 19s9.3-4.6 10.4-6.2a1.4 1.4 0 0 0 0-1.7C21.3 9.6 17.2 5 12 5zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                      {snippet.views}
+                    </span>
+                    <span className="stat">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d="M12 21.2c-.3 0-.6-.1-.8-.3l-7.2-6.7A5.3 5.3 0 0 1 3.2 7a5.2 5.2 0 0 1 9-2.6A5.2 5.2 0 0 1 21.8 7a5.3 5.3 0 0 1-1.8 7.2l-7.2 6.7c-.2.2-.5.3-.8.3z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                      {snippet.favoritesCount}
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

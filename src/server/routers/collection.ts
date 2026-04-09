@@ -94,6 +94,7 @@ export const collectionRouter = router({
           id: snippets.id,
           title: snippets.title,
           authorId: snippets.authorId,
+          languageId: snippets.languageId,
         })
         .from(collectionSnippets)
         .innerJoin(snippets, eq(collectionSnippets.snippetId, snippets.id))

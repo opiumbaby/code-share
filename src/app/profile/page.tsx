@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 
 export default function ProfilePage() {
   const [newEmail, setNewEmail] = useState("");
@@ -17,6 +19,8 @@ export default function ProfilePage() {
   const updateMutation = trpc.user.update.useMutation({
     onSuccess: () => userQuery.refetch(),
   });
+  const deleteMutation = trpc.user.delete.useMutation();
+  const router = useRouter();
   const favoritesQuery = trpc.favorite.listDetailed.useQuery(
     { limit: 5 },
     { enabled: !!userId }
@@ -32,9 +36,6 @@ export default function ProfilePage() {
     <section className="stack">
       <div className="card">
         <h2>Профиль</h2>
-        <button className="secondary" onClick={() => userQuery.refetch()}>
-          Обновить
-        </button>
         {userQuery.isError && <p>Требуется авторизация</p>}
         {userQuery.data && (
           <div className="profile-info">
@@ -138,6 +139,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+
       <div className="grid">
         <div className="card">
           <div className="row">
@@ -231,6 +233,31 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="card">
+        <h3>Удаление аккаунта</h3>
+        <p className="muted">
+          Все ваши сниппеты, комментарии, избранное и коллекции будут удалены.
+        </p>
+        <button
+          className="secondary danger"
+          onClick={async () => {
+            const approved = window.confirm(
+              "Удалить аккаунт? Все ваши данные будут удалены без возможности восстановления."
+            );
+            if (!approved) return;
+            await deleteMutation.mutateAsync({ id: userId });
+            await authClient.signOut();
+            window.location.href = "/";
+          }}
+          disabled={!userId || deleteMutation.isPending}
+        >
+          Удалить аккаунт
+        </button>
+        {deleteMutation.isError && (
+          <p>{deleteMutation.error?.message ?? "Ошибка удаления аккаунта"}</p>
+        )}
       </div>
     </section>
   );

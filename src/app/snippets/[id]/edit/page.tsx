@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 
 const nameByExtension: Record<string, string> = {
@@ -23,8 +23,8 @@ export default function EditSnippetPage() {
   const snippetQuery = trpc.snippet.byId.useQuery({ id }, { enabled: !!id });
   const tagsQuery = trpc.snippet.tags.useQuery({ id }, { enabled: !!id });
   const languagesQuery = trpc.language.list.useQuery();
-  const createLanguage = trpc.language.create.useMutation();
   const updateMutation = trpc.snippet.update.useMutation();
+  const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
@@ -64,33 +64,27 @@ export default function EditSnippetPage() {
       return;
     }
 
-    let resolvedLanguageId: string | undefined;
     const existing = languagesQuery.data?.find(
       (language) => language.fileExtension.toLowerCase() === extension
     );
 
-    if (existing) {
-      resolvedLanguageId = existing.id;
-    } else {
-      const key = extension.replace(".", "");
-      const name = nameByExtension[key] ?? key.toUpperCase();
-      const created = await createLanguage.mutateAsync({
-        name,
-        fileExtension: extension,
-      });
-      resolvedLanguageId = created.id;
+    if (!existing) {
+      setFormError("Недопустимое расширение. Выберите из списка.");
+      return;
     }
 
     await updateMutation.mutateAsync({
       id,
       title: title.trim(),
       code: code.trim(),
-      languageId: resolvedLanguageId,
+      languageId: existing.id,
       tags: tags
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
     });
+
+    router.push("/");
   };
 
   if (!id) {

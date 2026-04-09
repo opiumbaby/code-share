@@ -7,6 +7,7 @@ import {
   collectionSnippets,
   comments,
   favorites,
+  languages,
   snippetTags,
   snippets,
   tags,
@@ -15,7 +16,7 @@ import {
 const createSnippetSchema = z.object({
   title: z.string().min(1),
   code: z.string().min(1),
-  languageId: z.string().uuid().optional(),
+  languageId: z.string().uuid(),
   tags: z.array(z.string().min(1)).optional(),
 });
 
@@ -109,6 +110,18 @@ export const snippetRouter = router({
     }),
   create: protectedProcedure.input(createSnippetSchema).mutation(async ({ ctx, input }) => {
     return ctx.db.transaction(async (tx) => {
+      const existingLanguage = await tx
+        .select({ id: languages.id })
+        .from(languages)
+        .where(eq(languages.id, input.languageId))
+        .limit(1);
+      if (existingLanguage.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Недопустимое расширение. Выберите из списка.",
+        });
+      }
+
       const now = new Date();
       const created = await tx
         .insert(snippets)

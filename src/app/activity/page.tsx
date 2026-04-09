@@ -9,9 +9,6 @@ export default function ActivityPage() {
     <section className="stack">
       <div className="card">
         <h2>Активность</h2>
-        <button className="secondary" onClick={() => activityQuery.refetch()}>
-          Обновить
-        </button>
       </div>
 
       {activityQuery.isError && <p>Требуется авторизация</p>}

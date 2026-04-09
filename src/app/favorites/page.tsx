@@ -10,9 +10,6 @@ export default function FavoritesPage() {
     <section className="stack">
       <div className="card">
         <h2>Избранное</h2>
-        <button className="secondary" onClick={() => favoritesQuery.refetch()}>
-          Обновить
-        </button>
       </div>
 
       {favoritesQuery.isError && <p>Требуется авторизация</p>}
