@@ -33,11 +33,7 @@ export default function UserProfilePage() {
 
   const avatarUrl = "avatarUrl" in userQuery.data ? userQuery.data.avatarUrl : undefined;
   const username =
-    "username" in userQuery.data
-      ? userQuery.data.username
-      : "name" in userQuery.data
-      ? userQuery.data.name
-      : "Пользователь";
+    "username" in userQuery.data ? userQuery.data.username : "Пользователь";
   const languageById = new Map(
     (languagesQuery.data ?? []).map((language) => [language.id, language.name])
   );

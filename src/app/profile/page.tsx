@@ -6,10 +6,45 @@ import { trpc } from "@/lib/trpc";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 
+function toRussianProfileUpdateError(error: unknown) {
+  const err = error as any;
+  const fieldErrors = err?.data?.zodError?.fieldErrors as
+    | Record<string, string[] | undefined>
+    | undefined;
+
+  if (fieldErrors?.email?.length) {
+    return "Введите корректный email.";
+  }
+  if (fieldErrors?.username?.length) {
+    return "Username должен содержать минимум 2 символа.";
+  }
+
+  const message = String(err?.message ?? "").toLowerCase();
+
+  if (message.includes("username already taken")) {
+    return "Этот username уже занят.";
+  }
+  if (message.includes("email already taken")) {
+    return "Этот email уже используется.";
+  }
+  if (message.includes("not owner of profile")) {
+    return "Можно обновлять только свой профиль.";
+  }
+  if (message.includes("authentication required") || message.includes("unauthorized")) {
+    return "Требуется авторизация.";
+  }
+  if (message.includes("invalid email")) {
+    return "Введите корректный email.";
+  }
+
+  return "Не удалось обновить профиль. Попробуйте еще раз.";
+}
+
 export default function ProfilePage() {
   const [newEmail, setNewEmail] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [avatarError, setAvatarError] = useState("");
+  const [profileUpdateError, setProfileUpdateError] = useState("");
   const userQuery = trpc.user.me.useQuery();
   const userId = userQuery.data?.id ?? "";
   const snippetsQuery = trpc.snippet.list.useQuery(
@@ -54,11 +89,7 @@ export default function ProfilePage() {
               <p>Email: {"email" in userQuery.data ? userQuery.data.email : "—"}</p>
               <p>
                 Username:{" "}
-                {"username" in userQuery.data
-                  ? userQuery.data.username
-                  : "name" in userQuery.data
-                  ? userQuery.data.name
-                  : "—"}
+                {"username" in userQuery.data ? userQuery.data.username : "—"}
               </p>
               <p>Role: {"role" in userQuery.data ? userQuery.data.role : "USER"}</p>
               <div className="stack">
@@ -122,19 +153,40 @@ export default function ProfilePage() {
             onChange={(event) => setNewUsername(event.target.value)}
           />
           <button
-            onClick={() =>
+            onClick={() => {
+              setProfileUpdateError("");
+              const email = newEmail.trim();
+              const username = newUsername.trim();
+
+              if (!email && !username) {
+                setProfileUpdateError("Введите новый email или username.");
+                return;
+              }
+
+              if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                setProfileUpdateError("Введите корректный email.");
+                return;
+              }
+
+              if (username && username.length < 2) {
+                setProfileUpdateError("Username должен содержать минимум 2 символа.");
+                return;
+              }
+
+              updateMutation.reset();
               updateMutation.mutate({
                 id: userId,
-                email: newEmail.trim() || undefined,
-                username: newUsername.trim() || undefined,
-              })
-            }
+                email: email || undefined,
+                username: username || undefined,
+              });
+            }}
             disabled={!userId || updateMutation.isPending}
           >
             Сохранить
           </button>
+          {profileUpdateError && <p>{profileUpdateError}</p>}
           {updateMutation.isError && (
-            <p>{updateMutation.error?.message ?? "Ошибка обновления"}</p>
+            <p>{toRussianProfileUpdateError(updateMutation.error)}</p>
           )}
         </div>
       </div>

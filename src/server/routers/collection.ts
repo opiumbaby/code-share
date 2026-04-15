@@ -66,7 +66,7 @@ export const collectionRouter = router({
   list: publicProcedure
     .input(z.object({ ownerId: z.string().min(1).optional() }).optional())
     .query(async ({ ctx, input }) => {
-      let query = ctx.db
+      const baseQuery = ctx.db
         .select({
           id: collections.id,
           name: collections.name,
@@ -80,10 +80,10 @@ export const collectionRouter = router({
         .orderBy(collections.createdAt);
 
       if (input?.ownerId) {
-        query = query.where(eq(collections.ownerId, input.ownerId));
+        return baseQuery.where(eq(collections.ownerId, input.ownerId));
       }
 
-      return query;
+      return baseQuery;
     }),
 
   snippets: publicProcedure

@@ -181,7 +181,7 @@ export const snippetRouter = router({
       );
     }
 
-    let query = ctx.db
+    const baseQuery = ctx.db
       .selectDistinct({
         id: snippets.id,
         title: snippets.title,
@@ -196,21 +196,38 @@ export const snippetRouter = router({
       .from(snippets);
 
     if (input?.tag) {
-      query = query
+      const queryWithTag = baseQuery
         .innerJoin(snippetTags, eq(snippetTags.snippetId, snippets.id))
         .innerJoin(tags, eq(snippetTags.tagId, tags.id))
         .where(and(eq(tags.name, input.tag), ...conditions));
-    } else if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+
+      if (input?.sort === "popular") {
+        return queryWithTag
+          .orderBy(desc(snippets.favoritesCount))
+          .limit(pageSize)
+          .offset((page - 1) * pageSize);
+      }
+
+      return queryWithTag
+        .orderBy(desc(snippets.createdAt))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize);
     }
+
+    const queryWithoutTag =
+      conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
     if (input?.sort === "popular") {
-      query = query.orderBy(desc(snippets.favoritesCount));
-    } else {
-      query = query.orderBy(desc(snippets.createdAt));
+      return queryWithoutTag
+        .orderBy(desc(snippets.favoritesCount))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize);
     }
 
-    return query.limit(pageSize).offset((page - 1) * pageSize);
+    return queryWithoutTag
+      .orderBy(desc(snippets.createdAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
   }),
 
   byId: publicProcedure
