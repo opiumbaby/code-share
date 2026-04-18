@@ -25,6 +25,9 @@ build/
 
 # Coverage
 coverage/
+playwright-report/
+test-results/
+.playwright/
 
 # Environment files
 .env

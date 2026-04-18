@@ -132,7 +132,7 @@ export default function HomePage() {
                     setQuery("");
                   }}
                 >
-                  {tagItem.name} ({tagItem.usageCount})
+                  {tagItem.name}
                 </button>
               </li>
             ))}

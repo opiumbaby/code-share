@@ -3,26 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-
-function toRussianSignUpError(message: string) {
-  const text = message.toLowerCase();
-  if (text.includes("email already") || text.includes("already registered") || text.includes("already in use")) {
-    return "Этот email уже зарегистрирован.";
-  }
-  if (text.includes("invalid email") || (text.includes("email") && text.includes("format"))) {
-    return "Неверный формат email.";
-  }
-  if (text.includes("weak password") || text.includes("password too weak")) {
-    return "Пароль слишком простой.";
-  }
-  if (text.includes("password") && text.includes("length")) {
-    return "Пароль слишком короткий.";
-  }
-  if (text.includes("name") && text.includes("required")) {
-    return "Введите имя.";
-  }
-  return "Не удалось создать аккаунт. Проверьте данные и попробуйте снова.";
-}
+import { toRussianSignUpError } from "@/lib/form-errors";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");

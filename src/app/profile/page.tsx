@@ -5,40 +5,7 @@ import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
-
-function toRussianProfileUpdateError(error: unknown) {
-  const err = error as any;
-  const fieldErrors = err?.data?.zodError?.fieldErrors as
-    | Record<string, string[] | undefined>
-    | undefined;
-
-  if (fieldErrors?.email?.length) {
-    return "Введите корректный email.";
-  }
-  if (fieldErrors?.username?.length) {
-    return "Username должен содержать минимум 2 символа.";
-  }
-
-  const message = String(err?.message ?? "").toLowerCase();
-
-  if (message.includes("username already taken")) {
-    return "Этот username уже занят.";
-  }
-  if (message.includes("email already taken")) {
-    return "Этот email уже используется.";
-  }
-  if (message.includes("not owner of profile")) {
-    return "Можно обновлять только свой профиль.";
-  }
-  if (message.includes("authentication required") || message.includes("unauthorized")) {
-    return "Требуется авторизация.";
-  }
-  if (message.includes("invalid email")) {
-    return "Введите корректный email.";
-  }
-
-  return "Не удалось обновить профиль. Попробуйте еще раз.";
-}
+import { toRussianProfileUpdateError } from "@/lib/form-errors";
 
 export default function ProfilePage() {
   const [newEmail, setNewEmail] = useState("");

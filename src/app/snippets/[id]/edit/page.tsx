@@ -3,18 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
-
-const nameByExtension: Record<string, string> = {
-  ts: "TypeScript",
-  js: "JavaScript",
-  cpp: "C++",
-};
-
-function normalizeExtension(value: string) {
-  const trimmed = value.trim().toLowerCase();
-  if (!trimmed) return "";
-  return trimmed.startsWith(".") ? trimmed : `.${trimmed}`;
-}
+import { normalizeExtension } from "@/lib/snippet-utils";
 
 export default function EditSnippetPage() {
   const params = useParams();
@@ -31,25 +20,48 @@ export default function EditSnippetPage() {
   const [languageExtension, setLanguageExtension] = useState("");
   const [tags, setTags] = useState("");
   const [formError, setFormError] = useState("");
+  const [initializedSnippetId, setInitializedSnippetId] = useState<string | null>(null);
+  const [tagsInitializedForSnippetId, setTagsInitializedForSnippetId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (snippetQuery.data) {
+    if (snippetQuery.data && snippetQuery.data.id !== initializedSnippetId) {
       setTitle(snippetQuery.data.title);
       setCode(snippetQuery.data.code);
-      const language = languagesQuery.data?.find(
-        (item) => item.id === snippetQuery.data.languageId
-      );
-      if (language?.fileExtension) {
-        setLanguageExtension(language.fileExtension);
-      }
+      setLanguageExtension("");
+      setTags("");
+      setTagsInitializedForSnippetId(null);
+      setInitializedSnippetId(snippetQuery.data.id);
     }
-  }, [snippetQuery.data, languagesQuery.data]);
+  }, [snippetQuery.data, initializedSnippetId]);
 
   useEffect(() => {
-    if (tagsQuery.data) {
-      setTags(tagsQuery.data.join(", "));
+    if (!snippetQuery.data || languageExtension) {
+      return;
     }
-  }, [tagsQuery.data]);
+
+    const language = languagesQuery.data?.find((item) => item.id === snippetQuery.data.languageId);
+    if (language?.fileExtension) {
+      setLanguageExtension(language.fileExtension);
+    }
+  }, [snippetQuery.data, languagesQuery.data, languageExtension]);
+
+  useEffect(() => {
+    if (
+      snippetQuery.data &&
+      tagsQuery.data &&
+      tagsInitializedForSnippetId !== snippetQuery.data.id
+    ) {
+      setTags(tagsQuery.data.join(", "));
+      setTagsInitializedForSnippetId(snippetQuery.data.id);
+    }
+  }, [snippetQuery.data, tagsQuery.data, tagsInitializedForSnippetId]);
+
+  useEffect(() => {
+    if (!snippetQuery.data) {
+      setInitializedSnippetId(null);
+      setTagsInitializedForSnippetId(null);
+    }
+  }, [snippetQuery.data]);
 
   const handleSubmit = async () => {
     setFormError("");

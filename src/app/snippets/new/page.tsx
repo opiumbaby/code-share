@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc";
-
-function normalizeExtension(value: string) {
-  const trimmed = value.trim().toLowerCase();
-  if (!trimmed) return "";
-  return trimmed.startsWith(".") ? trimmed : `.${trimmed}`;
-}
+import { normalizeExtension } from "@/lib/snippet-utils";
 
 export default function NewSnippetPage() {
   const createMutation = trpc.snippet.create.useMutation();
