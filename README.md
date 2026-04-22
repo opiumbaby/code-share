@@ -62,6 +62,7 @@ APP_PORT=3000 BETTER_AUTH_URL=http://localhost:3000 npm run docker:up
 Что произойдет автоматически:
 - поднимется PostgreSQL в контейнере `codeshare-db`
 - применится схема БД (`db:push`)
+- применится схема Better Auth (`auth:migrate`)
 - загрузятся сиды (`db:seed`)
 - запустится Next.js на `http://localhost:3000`
 

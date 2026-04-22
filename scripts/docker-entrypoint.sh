@@ -4,6 +4,9 @@ set -e
 echo "Waiting for database and applying schema..."
 npm run db:push
 
+echo "Applying Better Auth schema..."
+npm run auth:migrate
+
 echo "Seeding database..."
 npm run db:seed
 
