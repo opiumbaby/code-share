@@ -8,4 +8,4 @@ echo "Seeding database..."
 npm run db:seed
 
 echo "Starting Next.js on 0.0.0.0:${PORT:-3000}..."
-npm run dev -- -H 0.0.0.0 -p "${PORT:-3000}"
+npm run start -- -H 0.0.0.0 -p "${PORT:-3000}"
