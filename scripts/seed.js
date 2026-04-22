@@ -85,13 +85,25 @@ async function main() {
     const snippetIds = [];
     for (const item of snippetSeed) {
       const languageId = languageMap.get(item.languageExt) || null;
-      const result = await client.query(
+      const existingSnippet = await client.query(
+        `SELECT id FROM snippets
+         WHERE title = $1 AND author_id = $2
+         LIMIT 1`,
+        [item.title, demoUserId]
+      );
+
+      if (existingSnippet.rows[0]?.id) {
+        snippetIds.push({ id: existingSnippet.rows[0].id, tags: item.tags });
+        continue;
+      }
+
+      const createdSnippet = await client.query(
         `INSERT INTO snippets (title, code, language_id, author_id)
          VALUES ($1, $2, $3, $4)
          RETURNING id`,
         [item.title, item.code, languageId, demoUserId]
       );
-      snippetIds.push({ id: result.rows[0].id, tags: item.tags });
+      snippetIds.push({ id: createdSnippet.rows[0].id, tags: item.tags });
     }
 
     const tagRows = await client.query(`SELECT id, name FROM tags WHERE name = ANY($1)`, [tags]);
@@ -102,7 +114,9 @@ async function main() {
         const tagId = tagMap.get(tagName);
         if (!tagId) continue;
         await client.query(
-          `INSERT INTO snippet_tags (snippet_id, tag_id) VALUES ($1, $2)`,
+          `INSERT INTO snippet_tags (snippet_id, tag_id)
+           VALUES ($1, $2)
+           ON CONFLICT DO NOTHING`,
           [snippet.id, tagId]
         );
       }
@@ -111,7 +125,10 @@ async function main() {
     if (snippetIds[0]) {
       await client.query(
         `INSERT INTO comments (text, author_id, snippet_id)
-         VALUES ($1, $2, $3)`,
+         SELECT $1, $2, $3
+         WHERE NOT EXISTS (
+           SELECT 1 FROM comments WHERE text = $1 AND author_id = $2 AND snippet_id = $3
+         )`,
         ["Отличный пример", demoUserId, snippetIds[0].id]
       );
 
@@ -123,24 +140,36 @@ async function main() {
       );
     }
 
-    const collectionResult = await client.query(
-      `INSERT INTO collections (name, owner_id)
-       VALUES ($1, $2)
-       RETURNING id`,
+    const existingCollection = await client.query(
+      `SELECT id FROM collections
+       WHERE name = $1 AND owner_id = $2
+       LIMIT 1`,
       ["Моя коллекция", demoUserId]
     );
 
-    const collectionId = collectionResult.rows[0]?.id;
+    let collectionId = existingCollection.rows[0]?.id;
+    if (!collectionId) {
+      const collectionResult = await client.query(
+        `INSERT INTO collections (name, owner_id)
+         VALUES ($1, $2)
+         RETURNING id`,
+        ["Моя коллекция", demoUserId]
+      );
+      collectionId = collectionResult.rows[0]?.id;
+    }
+
     if (collectionId) {
       for (const snippet of snippetIds) {
         await client.query(
           `INSERT INTO collection_snippets (collection_id, snippet_id)
-           VALUES ($1, $2)`,
+           VALUES ($1, $2)
+           ON CONFLICT DO NOTHING`,
           [collectionId, snippet.id]
         );
       }
     }
 
+    await client.query(`UPDATE tags SET usage_count = 0`);
     await client.query(
       `UPDATE tags SET usage_count = sub.count
        FROM (

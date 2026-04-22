@@ -43,6 +43,45 @@ CodeShare — клиент‑серверное приложение для пу
 
 ## Запуск проекта
 
+### Быстрый запуск в Docker (рекомендуется)
+
+Требования:
+- Docker Desktop
+
+Запуск:
+
+```bash
+npm run docker:up
+```
+
+
+```bash
+APP_PORT=3000 BETTER_AUTH_URL=http://localhost:3000 npm run docker:up
+```
+
+Что произойдет автоматически:
+- поднимется PostgreSQL в контейнере `codeshare-db`
+- применится схема БД (`db:push`)
+- загрузятся сиды (`db:seed`)
+- запустится Next.js на `http://localhost:3000`
+
+
+
+Остановка:
+
+```bash
+npm run docker:down
+```
+
+Если нужно удалить данные БД (volume) и поднять проект с нуля:
+
+```bash
+docker compose down -v
+npm run docker:up
+```
+
+---
+
 ### 1. Клонировать репозиторий
 
 ```bash
@@ -75,7 +114,7 @@ psql -U postgres -c "CREATE DATABASE codeshare;"
 ### 5. Применить миграции
 
 ```bash
-npx drizzle-kit migrate
+npm run db:push
 ```
 
 ### 6. Заполнить базу начальными данными (опционально)
@@ -118,4 +157,3 @@ npx playwright test
 ```
 
 ---
-

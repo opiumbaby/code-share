@@ -10,6 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:seed": "node scripts/seed.js",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "playwright test",
