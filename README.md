@@ -43,10 +43,7 @@ CodeShare — клиент‑серверное приложение для пу
 
 ## Запуск проекта
 
-### Быстрый запуск в Docker (рекомендуется)
-
-Требования:
-- Docker Desktop
+### Запуск в Docker
 
 Запуск:
 
@@ -59,7 +56,7 @@ npm run docker:up
 APP_PORT=3000 BETTER_AUTH_URL=http://localhost:3000 npm run docker:up
 ```
 
-Что произойдет автоматически:
+автоматически:
 - поднимется PostgreSQL в контейнере `codeshare-db`
 - применится схема БД (`db:push`)
 - применится схема Better Auth (`auth:migrate`)
@@ -74,14 +71,6 @@ APP_PORT=3000 BETTER_AUTH_URL=http://localhost:3000 npm run docker:up
 npm run docker:down
 ```
 
-Если нужно удалить данные БД (volume) и поднять проект с нуля:
-
-```bash
-docker compose down -v
-npm run docker:up
-```
-
----
 
 ### 1. Клонировать репозиторий
 
